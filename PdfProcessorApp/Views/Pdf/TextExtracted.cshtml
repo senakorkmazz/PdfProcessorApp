@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Extracted Text";
+}
+
+<h2>Extracted Text</h2>
+
+@if (ViewBag.ExtractedText != null)
+{
+    <div class="card">
+        <div class="card-header">
+            Text from PDF:
+        </div>
+        <div class="card-body">
+            <pre style="white-space: pre-wrap; word-wrap: break-word;">@ViewBag.ExtractedText</pre>
+        </div>
+    </div>
+}
+else
+{
+    <p>No text was extracted or an error occurred.</p>
+}
+<p><a asp-action="Index">Back to PDF Tools</a></p>

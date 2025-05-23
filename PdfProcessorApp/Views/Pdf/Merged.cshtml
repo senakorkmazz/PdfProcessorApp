@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Merged PDF";
+}
+
+<h2>Merged PDF</h2>
+
+<p>@ViewBag.Message</p>
+
+@if (ViewBag.MergedFilePath != null)
+{
+    <p>
+        Your merged PDF is ready:
+        <a href="@Url.Content(ViewBag.MergedFilePath)" target="_blank" class="btn btn-success">View Merged PDF</a>
+        <a href="@Url.Content(ViewBag.MergedFilePath)" download class="btn btn-info">Download Merged PDF</a>
+    </p>
+}
+<p><a asp-action="Index">Back to PDF Tools</a></p>

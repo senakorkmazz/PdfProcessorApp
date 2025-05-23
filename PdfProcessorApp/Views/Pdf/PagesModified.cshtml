@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Pages Modified";
+}
+
+<h2>Pages Modified Result</h2>
+
+<p>@ViewBag.Message</p>
+
+@if (ViewBag.ModifiedFilePath != null)
+{
+    <p>
+        Your modified PDF is ready:
+        <a href="@Url.Content(ViewBag.ModifiedFilePath)" target="_blank" class="btn btn-success">View Modified PDF</a>
+        <a href="@Url.Content(ViewBag.ModifiedFilePath)" download class="btn btn-info">Download Modified PDF</a>
+    </p>
+}
+<p><a asp-action="Index">Back to PDF Tools</a></p>
