@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "PDF İşlemleri";
     var fileName = ViewBag.FileName as string;
     var activeTool = ViewBag.ActiveTool as string ?? "view";
@@ -8,103 +8,243 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
+    /* Özel stil tanımları - site.css'deki genel stillerle birlikte çalışır */
+    .page-header {
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid var(--primary-color);
+    }
+    
+    .page-header h2 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
     .sidebar {
-        min-width: 220px;
-        max-width: 220px;
-        min-height: 400px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px 10px;
-        margin-right: 24px;
+        min-width: 240px;
+        max-width: 240px;
+        min-height: 450px;
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        padding: 1.5rem 1rem;
+        margin-right: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
     }
-
-        .sidebar .nav-link.active {
-            background: #0d6efd;
-            color: #fff !important;
-        }
-
+    
+    .sidebar .nav-link {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar .nav-link i {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar .nav-link.active {
+        background-color: var(--primary-color);
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar .nav-link:hover:not(.active) {
+        background-color: rgba(79, 109, 245, 0.1);
+        transform: translateX(3px);
+    }
+    
     .pdf-viewer {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
         min-height: 600px;
-        background: #fff;
-        padding: 16px;
+        background-color: var(--card-bg);
+        padding: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
-
+    
     .pdf-embed {
         width: 100%;
         height: 600px;
         border: none;
-        border-radius: 8px;
-        background: #f5f5f5;
+        border-radius: 0.375rem;
+        background-color: #2c2c2c;
     }
-
+    
     .pdf-scroll-viewer {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        background-color: #2c2c2c;
         max-height: 700px;
         overflow-y: auto;
-        padding: 16px;
+        padding: 1.5rem;
     }
-
+    
     .pdf-scroll-page {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 32px;
+        margin-bottom: 2rem;
         position: relative;
-        background: #fff;
-        border: 1px solid #bbb;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px #0001;
-        padding: 12px 8px 16px 8px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 1rem 0.75rem 1.25rem 0.75rem;
         width: fit-content;
         min-width: 320px;
         max-width: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
+    
+    .pdf-scroll-page:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    
     .pdf-scroll-canvas {
-        background: #fff;
-        border-radius: 4px;
+        background-color: #2c2c2c;
+        border-radius: 0.25rem;
         max-width: 100%;
-        margin-bottom: 8px;
+        margin-bottom: 0.75rem;
     }
-
+    
     .pdf-scroll-page-number {
-        font-size: 15px;
+        font-size: 0.95rem;
         font-weight: 500;
-        color: #333;
-        margin-bottom: 8px;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
         margin-top: 0;
         text-align: center;
         width: 100%;
     }
-
+    
     .pdf-scroll-delete {
-        margin-top: 8px;
+        margin-top: 0.75rem;
         margin-bottom: 0;
         width: 100%;
+        transition: all 0.2s ease;
+    }
+    
+    /* Form elemanları için özel stiller */
+    .upload-form {
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+    
+    .upload-form:hover {
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .upload-form .form-label {
+        font-weight: 500;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    /* İlerleme çubuğu için özel stiller */
+    #progressContainer {
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        padding: 1rem 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Animasyonlar */
+    .tool-section {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* İndirme butonu için özel stil */
+    #convertedFileContainer {
+        transition: all 0.3s ease;
+    }
+    
+    #convertedFileLink {
+        transition: all 0.2s ease;
+    }
+    
+    #convertedFileLink:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Metin çıkarma için özel stiller */
+    #extractedTextContainer {
+        background-color: #2c2c2c;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+        max-height: 500px;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+    }
+    
+    .extracted-text {
+        font-family: 'Consolas', 'Courier New', monospace;
+        color: var(--text-color);
+        white-space: pre-wrap;
+        margin: 0;
+        line-height: 1.5;
     }
 </style>
 
 <div class="container mt-5">
-    <h2 class="mb-4">PDF İşlemleri</h2>
+    <div class="page-header mb-4">
+        <h2><i class="bi bi-file-earmark-pdf"></i> PDF İşlemleri</h2>
+    </div>
 
     @if (TempData["Message"] != null && activeTool == null)
     {
         <div class="alert alert-info">@TempData["Message"]</div>
     }
+    
+    <!-- İşlem durumu için ilerleme çubuğu -->
+    <div id="progressContainer" class="mb-4" style="display: none;">
+        <h5 id="statusText">İşleniyor...</h5>
+        <div class="progress">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                 role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                <span id="progressText">0%</span>
+            </div>
+        </div>
+    </div>
 
 
     @if (fileName == null)
     {
-        <form asp-action="UploadPdf" method="post" enctype="multipart/form-data" class="card p-4 mb-4 shadow-sm">
-            <div class="mb-3">
-                <label class="form-label">PDF Yükle</label>
-                <input type="file" name="pdfFile" accept=".pdf" class="form-control" required />
+        <form asp-action="UploadPdf" method="post" enctype="multipart/form-data" class="upload-form p-4 mb-4 fade-in">
+            <div class="mb-4">
+                <h4 class="mb-3"><i class="bi bi-cloud-arrow-up"></i> PDF Yükle</h4>
+                <div class="mb-3">
+                    <label class="form-label">PDF Dosyası Seçin</label>
+                    <input type="file" name="pdfFile" accept=".pdf" class="form-control" required />
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Yükle
+                    </button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Yükle</button>
         </form>
     }
     else
@@ -113,12 +253,12 @@
             <div class="col-md-3">
                 <div class="sidebar">
                     <nav class="nav flex-column nav-pills" id="toolMenu">
-                        <button class="nav-link @(activeTool == "view" ? "active" : "")" data-tool="view">PDF'i Görüntüle</button>
-                        <button class="nav-link @(activeTool == "extractText" ? "active" : "")" data-tool="extractText">Metin Çıkar</button>
-                        <button class="nav-link @(activeTool == "convertPdf" ? "active" : "")" data-tool="convertPdf">PDF Dönüştür</button>
-                        <button class="nav-link @(activeTool == "deletePages" ? "active" : "")" data-tool="deletePages">Sayfa Sil</button>
-                        <button class="nav-link @(activeTool == "mergePdf" ? "active" : "")" data-tool="mergePdf">PDF Birleştir</button>
-                        <a href="@Url.Action("Index", "Pdf")" class="nav-link text-danger mt-3">Yeni PDF Yükle</a>
+                        <button class="nav-link @(activeTool == "view" ? "active" : "")" data-tool="view"><i class="bi bi-eye"></i> PDF'i Görüntüle</button>
+                        <button class="nav-link @(activeTool == "extractText" ? "active" : "")" data-tool="extractText"><i class="bi bi-text-paragraph"></i> Metin Çıkar</button>
+                        <button class="nav-link @(activeTool == "convertPdf" ? "active" : "")" data-tool="convertPdf"><i class="bi bi-arrow-repeat"></i> PDF Dönüştür</button>
+                        <button class="nav-link @(activeTool == "deletePages" ? "active" : "")" data-tool="deletePages"><i class="bi bi-trash"></i> Sayfa Sil</button>
+                        <button class="nav-link @(activeTool == "mergePdf" ? "active" : "")" data-tool="mergePdf"><i class="bi bi-layers"></i> PDF Birleştir</button>
+                        <a href="@Url.Action("Index", "Pdf")" class="nav-link text-danger mt-3"><i class="bi bi-plus-circle"></i> Yeni PDF Yükle</a>
                     </nav>
                 </div>
             </div>
@@ -135,8 +275,20 @@
                     <div id="tool-extractText" class="tool-section @(activeTool == "extractText" ? "" : "d-none")">
                         <form asp-action="ExtractText" method="post">
                             <input type="hidden" name="fileName" value="@fileName" />
-                            <button type="submit" class="btn btn-outline-primary mb-3">Metin Çıkar</button>
+                            <button type="submit" class="btn btn-outline-primary mb-3"><i class="bi bi-text-paragraph"></i> Metin Çıkar</button>
                         </form>
+                        
+                        <!-- İşlem başlatıldı mesajı (işlem tamamlandığında JavaScript ile gizlenecek) -->
+                        @if (ViewBag.Message != null && activeTool == "extractText")
+                        {
+                            <div id="extractingMessage" class="alert alert-info mt-2">@ViewBag.Message</div>
+                        }
+                        
+                        <!-- Çıkarılan metin için konteyner (başlangıçta gizli) -->
+                        <div id="extractedTextContainer" class="mt-3" style="display: none;">
+                            <!-- Metin içeriği JavaScript tarafından doldurulacak -->
+                        </div>
+                        
                         @if (ViewBag.ExtractedText != null)
                         {
                             <div class="alert alert-light" style="white-space: pre-wrap; max-height: 400px; overflow:auto;">
@@ -158,18 +310,18 @@
                             </div>
                             <button type="submit" class="btn btn-outline-primary">Dönüştür</button>
                         </form>
-                        @if (ViewBag.ConvertedFilePath != null)
-                        {
-                            var convertedFilePath = ViewBag.ConvertedFilePath as string;
-                            var ext = System.IO.Path.GetExtension(convertedFilePath)?.ToLowerInvariant();
-                            var label = ext == ".docx" ? "DOCX dosyasını indir" : ext == ".txt" ? "TXT dosyasını indir" : "Dosyayı indir";
-                            <div class="alert alert-success mt-2">
-                                <a href="@convertedFilePath" download>@label</a>
-                            </div>
-                        }
+                        <!-- İndirme butonu için konteyner (başlangıçta gizli) -->
+                        <div id="convertedFileContainer" class="alert alert-success mt-2" style="display: none;">
+                            <a id="convertedFileLink" href="#" class="btn btn-success btn-sm">
+                                <i class="bi bi-download"></i> Dosyayı indir
+                            </a>
+                            <small class="d-block mt-1 text-muted">Dosya indirmeye hazır</small>
+                        </div>
+                        
+                        <!-- İşlem başlatıldı mesajı (işlem tamamlandığında JavaScript ile gizlenecek) -->
                         @if (ViewBag.Message != null && activeTool == "convertPdf")
                         {
-                            <div class="alert alert-info mt-2">@ViewBag.Message</div>
+                            <div id="convertingMessage" class="alert alert-info mt-2">@ViewBag.Message</div>
                         }
                     </div>
                     
@@ -195,28 +347,70 @@
                             <div class="alert alert-info mb-3">@TempData["Message"]</div>
                         }
 
-                        <form asp-action="MergePdf" method="post" enctype="multipart/form-data" class="mb-3">
+                        <form id="mergePdfForm" asp-action="MergePdf" method="post" enctype="multipart/form-data" class="mb-3">
                             <input type="hidden" name="fileName" value="@fileName" />
                             <div class="mb-3">
                                 <label class="form-label">Birleştirilecek PDF Dosyası</label>
-                                <input type="file" name="fileToMerge" accept=".pdf" class="form-control" required />
+                                <input type="file" name="secondPdf" accept=".pdf" class="form-control" required />
                             </div>
                             <button type="submit" class="btn btn-primary">Birleştir</button>
                         </form>
 
-                        @if (activeTool == "mergePdf")
+                        @if (TempData["ProcessingId"] != null && activeTool == "mergePdf")
                         {
-                            <div class="card">
+                            <div id="processingInfo" data-request-id="@TempData["ProcessingId"]" style="display:none;">
+                            </div>
+                            
+                            <!-- İşlem durumu için ilerleme çubuğu -->
+                            <div id="progressContainer" class="mb-4" style="display: none;">
+                                <h5 id="statusText">İşleniyor...</h5>
+                                <div class="progress">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                                         role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                                        <span id="progressText">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Birleştirilmiş PDF'i göstermek için konteyner -->
+                            <div id="mergedPdfContainer" style="display: none;" class="mt-4">
+                                <h5>Birleştirilmiş PDF:</h5>
+                                <div class="embed-responsive embed-responsive-16by9">
+                                    <iframe id="mergedPdfFrame" class="embed-responsive-item" style="width: 100%; height: 500px;"></iframe>
+                                </div>
+                            </div>
+                        }
+
+                        @if (ViewBag.MergedFilePath != null && activeTool == "mergePdf")
+                        {
+                            <div class="card mt-3">
                                 <div class="card-header">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">Birleştirilmiş PDF</h5>
-                                        <a href="@currentPdfPath" class="btn btn-success btn-sm" download>
+                                        <a href="@ViewBag.MergedFilePath" class="btn btn-success btn-sm" download>
                                             <i class="bi bi-download"></i> İndir
                                         </a>
                                     </div>
                                 </div>
                                 <div class="card-body p-0">
-                                    <embed src="@currentPdfPath" type="application/pdf" class="pdf-embed" />
+                                    <embed src="@ViewBag.MergedFilePath" type="application/pdf" style="width: 100%; height: 500px;" />
+                                </div>
+                            </div>
+                        }
+
+                        @if (ViewBag.MergedFilePath != null && activeTool == "mergePdf")
+                        {
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Birleştirilmiş PDF</h5>
+                                        <a href="@ViewBag.MergedFilePath" class="btn btn-success btn-sm" download>
+                                            <i class="bi bi-download"></i> İndir
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <embed src="@ViewBag.MergedFilePath" type="application/pdf" class="pdf-embed" />
                                 </div>
                             </div>
                         }
@@ -317,8 +511,20 @@
     }
 </div>
 
+<!-- İşlem durumu takibi için JavaScript dosyasını ekle -->
+<script src="/js/processing-status.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // İşlem durumunu takip et
+        @if (ViewBag.ProcessingId != null)
+        {
+            <text>
+            // İşlem durumunu takip etmek için JavaScript fonksiyonunu çağır
+            updateProgressBar('@ViewBag.ProcessingId');
+            </text>
+        }
+        
         var menu = document.getElementById("toolMenu");
         if (menu) {
             menu.querySelectorAll(".nav-link").forEach(function (btn) {

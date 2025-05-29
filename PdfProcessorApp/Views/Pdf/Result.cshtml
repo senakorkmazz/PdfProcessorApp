@@ -1,0 +1,53 @@
+@{
+    ViewBag.Title = "İşlem Sonucu";
+    var resultType = ViewBag.ResultType as string;
+    var fileName = ViewBag.FileName as string;
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3>İşlem Sonucu</h3>
+        </div>
+        <div class="card-body">
+            <h4 class="mb-3">@fileName</h4>
+            
+            @if (resultType == "text")
+            {
+                <div class="alert alert-light border" style="white-space: pre-wrap; max-height: 500px; overflow-y: auto; background-color: #f8f9fa;">
+                    @ViewBag.TextContent
+                </div>
+                <a href="/output/@fileName" download class="btn btn-outline-primary mt-2">
+                    <i class="bi bi-download"></i> Metin Dosyasını İndir
+                </a>
+            }
+            else if (resultType == "file")
+            {
+                <div class="mb-4">
+                    @if (ViewBag.FileExtension == ".pdf")
+                    {
+                        <div class="mb-3">
+                            <embed src="@ViewBag.FilePath" type="application/pdf" width="100%" height="500px" />
+                        </div>
+                    }
+                    else if (ViewBag.FileExtension == ".docx")
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-file-earmark-word"></i> DOCX dosyası oluşturuldu.
+                        </div>
+                    }
+                    
+                    <a href="@ViewBag.FilePath" download class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i> Dosyayı İndir
+                    </a>
+                </div>
+            }
+            
+            <div class="mt-4">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Ana Sayfaya Dön
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
