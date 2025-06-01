@@ -29,15 +29,15 @@ namespace PdfProcessorApp.Services
                 BootstrapServers = configuration["Kafka:BootstrapServers"],
                 GroupId = configuration["Kafka:GroupId"] ?? "pdf-processor-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
-                SessionTimeoutMs = 30000, // 30 saniye timeout
+                SessionTimeoutMs = 30000, 
                 SocketTimeoutMs = 30000,
                 ConnectionsMaxIdleMs = 30000,
-                MaxPollIntervalMs = 600000, // 10 dakika
-                FetchMaxBytes = 52428800, // 50MB - büyük PDF'ler için
-                MaxPartitionFetchBytes = 10485760, // 10MB
-                EnableAutoCommit = false, // Manuel commit için
-                EnablePartitionEof = true, // Partition sonunu tespit etmek için
-                IsolationLevel = IsolationLevel.ReadCommitted // Sadece commit edilmiş mesajları oku
+                MaxPollIntervalMs = 600000, 
+                FetchMaxBytes = 52428800, 
+                MaxPartitionFetchBytes = 10485760, 
+                EnableAutoCommit = false, 
+                EnablePartitionEof = true,
+                IsolationLevel = IsolationLevel.ReadCommitted
             };
             _topic = configuration["Kafka:Topic:PdfProcessing"] ?? "pdf-processing-topic";
             _logger = logger;
@@ -46,7 +46,6 @@ namespace PdfProcessorApp.Services
             _outputPath = Path.Combine(env.WebRootPath, "output");
             _statusService = statusService;
             
-            // Klasörlerin var olduğundan emin olalım
             if (!Directory.Exists(_uploadPath))
                 Directory.CreateDirectory(_uploadPath);
             if (!Directory.Exists(_outputPath))
@@ -81,7 +80,6 @@ namespace PdfProcessorApp.Services
                                         
                                         await ProcessMessageAsync(message);
                                         
-                                        // İşlem başarılı olduğunda manuel commit yap
                                         consumer.Commit(consumeResult);
                                     }
                                     else
@@ -120,7 +118,6 @@ namespace PdfProcessorApp.Services
         {
             try
             {
-                // İşleme başladığında durumu güncelle
                 message.Status = "Processing";
                 message.Progress = 10;
                 _statusService.AddOrUpdateStatus(message);
@@ -138,7 +135,6 @@ namespace PdfProcessorApp.Services
                         break;
                     default:
                         _logger.LogWarning($"Bilinmeyen operasyon türü: {message.OperationType}");
-                        // Bilinmeyen operasyon türü için işlemi başarısız olarak işaretle
                         message.Status = "Failed";
                         message.Progress = 0;
                         message.CompletionTime = DateTime.UtcNow;
@@ -146,7 +142,6 @@ namespace PdfProcessorApp.Services
                         break;
                 }
                 
-                // İşlem başarıyla tamamlandıysa ve hala %100 değilse, %100 olarak işaretle
                 if (message.Status != "Failed" && message.Progress < 100)
                 {
                     message.Status = "Completed";
@@ -159,7 +154,6 @@ namespace PdfProcessorApp.Services
             {
                 _logger.LogError($"Mesaj işlenirken hata oluştu: {ex.Message}");
                 
-                // Hata durumunda işlemi başarısız olarak işaretle
                 message.Status = "Failed";
                 message.Progress = 0;
                 message.CompletionTime = DateTime.UtcNow;
@@ -174,7 +168,6 @@ namespace PdfProcessorApp.Services
 
             try
             {
-                // PDF dosyasını aç
                 _logger.LogInformation($"PDF dosyası açılıyor: {filePath}");
                 message.Progress = 20;
                 _statusService.AddOrUpdateStatus(message);
@@ -187,9 +180,8 @@ namespace PdfProcessorApp.Services
                     int pageIndex = 0;
                     foreach (var page in document.GetPages())
                     {
-                        // Her sayfa için ilerleme durumunu güncelle
                         pageIndex++;
-                        var progressPercentage = 20 + (60 * pageIndex / pageCount); // 20% - 80% arası
+                        var progressPercentage = 20 + (60 * pageIndex / pageCount); 
                         message.Progress = progressPercentage;
                         _statusService.AddOrUpdateStatus(message);
                         
@@ -200,7 +192,6 @@ namespace PdfProcessorApp.Services
                     }
                 }
 
-                // Çıkarılan metni dosyaya yaz
                 message.Progress = 90;
                 _statusService.AddOrUpdateStatus(message);
                 _logger.LogInformation($"Metin dosyaya yazılıyor...");
@@ -208,7 +199,6 @@ namespace PdfProcessorApp.Services
                 var outputFilePath = Path.Combine(_outputPath, $"extracted_{Path.GetFileNameWithoutExtension(message.FileName)}.txt");
                 await File.WriteAllTextAsync(outputFilePath, extractedText.ToString(), Encoding.UTF8);
                 
-                // İşlem tamamlandı
                 message.Progress = 100;
                 message.Status = "Completed";
                 message.CompletionTime = DateTime.UtcNow;
@@ -220,7 +210,6 @@ namespace PdfProcessorApp.Services
             {
                 _logger.LogError($"Metin çıkarma sırasında hata oluştu: {ex.Message}");
                 
-                // Hata durumunda işlemi başarısız olarak işaretle
                 message.Status = "Failed";
                 message.Progress = 0;
                 message.CompletionTime = DateTime.UtcNow;
@@ -239,7 +228,6 @@ namespace PdfProcessorApp.Services
 
             try
             {
-                // PDF dosyasını aç
                 _logger.LogInformation($"PDF dosyası açılıyor: {filePath}");
                 message.Progress = 20;
                 _statusService.AddOrUpdateStatus(message);
@@ -253,9 +241,8 @@ namespace PdfProcessorApp.Services
                     int pageIndex = 0;
                     foreach (var page in document.GetPages())
                     {
-                        // Her sayfa için ilerleme durumunu güncelle
                         pageIndex++;
-                        var progressPercentage = 20 + (40 * pageIndex / pageCount); // 20% - 60% arası
+                        var progressPercentage = 20 + (40 * pageIndex / pageCount); 
                         message.Progress = progressPercentage;
                         _statusService.AddOrUpdateStatus(message);
                         
@@ -266,7 +253,6 @@ namespace PdfProcessorApp.Services
                     }
                 }
 
-                // Hedef formata dönüştürme
                 message.Progress = 70;
                 _statusService.AddOrUpdateStatus(message);
                 _logger.LogInformation($"PDF {targetFormat} formatına dönüştürülüyor...");
@@ -275,15 +261,12 @@ namespace PdfProcessorApp.Services
                 {
                     try
                     {
-                        // Klasörün var olduğundan emin olalım
                         var outputDir = Path.GetDirectoryName(outputFilePath);
                         if (!Directory.Exists(outputDir))
                             Directory.CreateDirectory(outputDir);
                             
-                        // Dosyayı UTF-8 ile oluşturalım
                         await File.WriteAllTextAsync(outputFilePath, extractedText.ToString(), Encoding.UTF8);
                         
-                        // Dosyanın oluşturulduğunu kontrol edelim
                         if (File.Exists(outputFilePath))
                         {
                             _logger.LogInformation($"PDF başarıyla TXT dosyasına dönüştürüldü: {outputFilePath}");
@@ -303,7 +286,6 @@ namespace PdfProcessorApp.Services
                 {
                     try
                     {
-                        // Klasörün var olduğundan emin olalım
                         var outputDir = Path.GetDirectoryName(outputFilePath);
                         if (!Directory.Exists(outputDir))
                             Directory.CreateDirectory(outputDir);
@@ -326,7 +308,7 @@ namespace PdfProcessorApp.Services
                                 lineIndex++;
                                 if (lineIndex % 100 == 0 || lineIndex == lineCount)
                                 {
-                                    var docxProgress = 80 + (15 * lineIndex / lineCount); // 80% - 95% arası
+                                    var docxProgress = 80 + (15 * lineIndex / lineCount); 
                                     message.Progress = docxProgress;
                                     _statusService.AddOrUpdateStatus(message);
                                     _logger.LogInformation($"DOCX oluşturma: {lineIndex}/{lineCount} satır işlendi. İlerleme: %{docxProgress}");
@@ -336,7 +318,6 @@ namespace PdfProcessorApp.Services
                             }
                         }
                         
-                        // Dosyanın oluşturulduğunu kontrol edelim
                         if (File.Exists(outputFilePath))
                         {
                             _logger.LogInformation($"PDF başarıyla DOCX dosyasına dönüştürüldü: {outputFilePath}");
@@ -362,7 +343,6 @@ namespace PdfProcessorApp.Services
                     return;
                 }
                 
-                // İşlem tamamlandı
                 message.Progress = 100;
                 message.Status = "Completed";
                 message.CompletionTime = DateTime.UtcNow;
@@ -372,7 +352,6 @@ namespace PdfProcessorApp.Services
             {
                 _logger.LogError($"{targetFormat.ToUpper()}'ye dönüştürme sırasında bir hata oluştu: {ex.Message}");
                 
-                // Hata durumunda işlemi başarısız olarak işaretle
                 message.Status = "Failed";
                 message.Progress = 0;
                 message.CompletionTime = DateTime.UtcNow;
@@ -387,20 +366,17 @@ namespace PdfProcessorApp.Services
             try
             {
                 var firstPdfPath = message.SourceFilePath;
-                var secondPdfPath = message.AdditionalData; // İkinci PDF'in yolu
+                var secondPdfPath = message.AdditionalData; 
                 var outputFilePath = message.OutputFilePath;
                 
                 _logger.LogInformation($"PDF birleştirme işlemi başlatılıyor: {firstPdfPath} ve {secondPdfPath}");
 
-                // Başlangıç durumunu güncelle
                 message.Status = "Processing";
                 message.Progress = 10;
                 _statusService.AddOrUpdateStatus(message);
                 
-                // İlerleme güncellemesinin hemen görünmesi için biraz bekle
                 await Task.Delay(500);
 
-                // Dosyaların var olduğunu kontrol et
                 if (!File.Exists(firstPdfPath))
                 {
                     _logger.LogError($"Birinci PDF dosyası bulunamadı: {firstPdfPath}");
@@ -421,35 +397,30 @@ namespace PdfProcessorApp.Services
                     return;
                 }
                 
-                // İlerleme güncellemesi
                 message.Progress = 25;
                 _statusService.AddOrUpdateStatus(message);
-                await Task.Delay(200); // Kısa bir gecikme ekle
+                await Task.Delay(200); 
                 
-                // Çıktı klasörünün var olduğundan emin ol
                 var outputDir = Path.GetDirectoryName(outputFilePath);
                 if (!Directory.Exists(outputDir))
                 {
                     Directory.CreateDirectory(outputDir);
                 }
                 
-                // PdfSharpCore ile PDF birleştirme işlemi
                 using (var outputDocument = new PdfSharpCore.Pdf.PdfDocument())
                 {
                     _logger.LogInformation($"Birinci PDF açılıyor: {firstPdfPath}");
                     message.Progress = 35;
                     _statusService.AddOrUpdateStatus(message);
-                    await Task.Delay(200); // Kısa bir gecikme ekle
+                    await Task.Delay(200); 
                     
-                    // İlk PDF'i aç
                     using (var inputDocument1 = PdfSharpCore.Pdf.IO.PdfReader.Open(firstPdfPath, PdfSharpCore.Pdf.IO.PdfDocumentOpenMode.Import))
                     {
                         _logger.LogInformation($"Birinci PDF sayfa sayısı: {inputDocument1.PageCount}");
                         message.Progress = 45;
                         _statusService.AddOrUpdateStatus(message);
-                        await Task.Delay(200); // Kısa bir gecikme ekle
+                        await Task.Delay(200); 
                         
-                        // Tüm sayfaları kopyala
                         for (int i = 0; i < inputDocument1.PageCount; i++)
                         {
                             outputDocument.AddPage(inputDocument1.Pages[i]);
@@ -467,17 +438,15 @@ namespace PdfProcessorApp.Services
                     _logger.LogInformation($"İkinci PDF açılıyor: {secondPdfPath}");
                     message.Progress = 60;
                     _statusService.AddOrUpdateStatus(message);
-                    await Task.Delay(200); // Kısa bir gecikme ekle
+                    await Task.Delay(200); 
                     
-                    // İkinci PDF'i aç
                     using (var inputDocument2 = PdfSharpCore.Pdf.IO.PdfReader.Open(secondPdfPath, PdfSharpCore.Pdf.IO.PdfDocumentOpenMode.Import))
                     {
                         _logger.LogInformation($"İkinci PDF sayfa sayısı: {inputDocument2.PageCount}");
                         message.Progress = 70;
                         _statusService.AddOrUpdateStatus(message);
-                        await Task.Delay(200); // Kısa bir gecikme ekle
+                        await Task.Delay(200); 
                         
-                        // Tüm sayfaları kopyala
                         for (int i = 0; i < inputDocument2.PageCount; i++)
                         {
                             outputDocument.AddPage(inputDocument2.Pages[i]);
@@ -495,28 +464,24 @@ namespace PdfProcessorApp.Services
                     _logger.LogInformation($"Birleştirilmiş PDF kaydediliyor: {outputFilePath}");
                     message.Progress = 90;
                     _statusService.AddOrUpdateStatus(message);
-                    await Task.Delay(200); // Kısa bir gecikme ekle
+                    await Task.Delay(200); 
                     
-                    // Birleştirilmiş PDF'i kaydet
                     outputDocument.Save(outputFilePath);
                     message.Progress = 95;
                     _statusService.AddOrUpdateStatus(message);
-                    await Task.Delay(200); // Kısa bir gecikme ekle
+                    await Task.Delay(200); 
                     
                     _logger.LogInformation($"Birleştirilmiş PDF kaydedildi. Toplam sayfa sayısı: {outputDocument.PageCount}");
                 }
                 
-                // Geçici dosyayı sil
                 if (File.Exists(secondPdfPath) && secondPdfPath.Contains("temp"))
                 {
                     _logger.LogInformation($"Geçici dosya siliniyor: {secondPdfPath}");
                     File.Delete(secondPdfPath);
                 }
                 
-                // Son bir gecikme ekle
                 await Task.Delay(500);
                 
-                // İşlem tamamlandı
                 message.Progress = 100;
                 message.Status = "Completed";
                 message.CompletionTime = DateTime.UtcNow;
@@ -529,7 +494,6 @@ namespace PdfProcessorApp.Services
                 _logger.LogError($"PDF birleştirme sırasında bir hata oluştu: {ex.Message}");
                 _logger.LogError($"Hata ayrıntıları: {ex.StackTrace}");
                 
-                // Hata durumunda işlemi başarısız olarak işaretle
                 message.Status = "Failed";
                 message.Progress = 0;
                 message.CompletionTime = DateTime.UtcNow;

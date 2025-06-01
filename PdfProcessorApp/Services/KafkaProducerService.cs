@@ -16,14 +16,14 @@ namespace PdfProcessorApp.Services
             _config = new ProducerConfig
             {
                 BootstrapServers = configuration["Kafka:BootstrapServers"],
-                MessageTimeoutMs = 30000, // 30 saniye timeout
+                MessageTimeoutMs = 30000, 
                 SocketTimeoutMs = 30000,
                 ConnectionsMaxIdleMs = 30000,
-                BatchSize = 16384, // 16KB batch size
-                LingerMs = 5, // 5ms linger time for batching
-                CompressionType = CompressionType.Snappy, // Snappy sıkıştırma algoritması
-                EnableIdempotence = true, // İdempotent üretim (tam bir kez teslim)
-                Acks = Acks.All // Tüm replikalardan onay bekle
+                BatchSize = 16384, 
+                LingerMs = 5, 
+                CompressionType = CompressionType.Snappy, 
+                EnableIdempotence = true, 
+                Acks = Acks.All 
             };
             _topic = configuration["Kafka:Topic:PdfProcessing"] ?? "pdf-processing-topic";
             _logger = logger;
@@ -34,11 +34,9 @@ namespace PdfProcessorApp.Services
         {
             try
             {
-                // İşlem durumunu başlangıç olarak ayarla
                 message.Status = "Waiting";
                 message.Progress = 0;
                 
-                // İşlem durumunu kaydet
                 _statusService.AddOrUpdateStatus(message);
                 
                 using (var producer = new ProducerBuilder<Null, string>(_config).Build())
@@ -47,9 +45,8 @@ namespace PdfProcessorApp.Services
                     var result = await producer.ProduceAsync(_topic, new Message<Null, string> { Value = messageJson });
                     _logger.LogInformation($"PDF işleme mesajı Kafka'ya gönderildi: {result.Topic} - {result.Offset}");
                     
-                    // Mesaj gönderildikten sonra durumu güncelle
                     message.Status = "Processing";
-                    message.Progress = 5; // Başlangıç ilerleme yüzdesi
+                    message.Progress = 5; 
                     _statusService.AddOrUpdateStatus(message);
                 }
             }
@@ -57,7 +54,6 @@ namespace PdfProcessorApp.Services
             {
                 _logger.LogError($"Kafka'ya mesaj gönderirken hata oluştu: {ex.Message}");
                 
-                // Hata durumunda işlem durumunu güncelle
                 message.Status = "Failed";
                 message.Progress = 0;
                 message.CompletionTime = DateTime.UtcNow;

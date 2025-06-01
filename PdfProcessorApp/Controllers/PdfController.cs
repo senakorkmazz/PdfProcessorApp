@@ -86,7 +86,6 @@ namespace PdfProcessorApp.Controllers
 
             try
             {
-                // Kafka mesajı oluştur
                 var message = new PdfProcessingMessage
                 {
                     FileName = fileName,
@@ -95,7 +94,6 @@ namespace PdfProcessorApp.Controllers
                     OutputFilePath = Path.Combine(_outputPath, $"extracted_{Path.GetFileNameWithoutExtension(fileName)}.txt")
                 };
 
-                // Mesajı Kafka'ya gönder
                 await _kafkaProducer.ProduceMessageAsync(message);
 
                 ViewBag.Message = "PDF metin çıkarma işlemi başlatıldı. İşlem tamamlandığında sonuçlar burada gösterilecek.";
@@ -129,7 +127,6 @@ namespace PdfProcessorApp.Controllers
 
             try
             {
-                // Kafka mesajı oluştur
                 var message = new PdfProcessingMessage
                 {
                     FileName = fileName,
@@ -139,12 +136,10 @@ namespace PdfProcessorApp.Controllers
                     OutputFilePath = outputFilePath
                 };
 
-                // Mesajı Kafka'ya gönder
                 await _kafkaProducer.ProduceMessageAsync(message);
 
                 ViewBag.Message = $"PDF {targetFormat.ToUpper()} formatına dönüştürme işlemi başlatıldı. İşlem tamamlandığında sonuçlar burada gösterilecek.";
                 ViewBag.ProcessingId = message.RequestId;
-                // URL'yi düzeltiyoruz - başında slash olmalı
                 ViewBag.ConvertedFilePath = $"/output/{outputFileName}";
             }
             catch (System.Exception ex)
@@ -207,7 +202,6 @@ namespace PdfProcessorApp.Controllers
 
             try
             {
-                // İlk PDF'in yolunu al
                 var firstPdfPath = Path.Combine(_uploadPath, fileName);
                 if (!System.IO.File.Exists(firstPdfPath))
                 {
@@ -215,7 +209,6 @@ namespace PdfProcessorApp.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // İkinci PDF'i geçici olarak kaydet
                 var secondFileName = Path.GetFileName(secondPdf.FileName);
                 var secondFilePath = Path.Combine(_uploadPath, $"temp_{secondFileName}");
 
@@ -224,10 +217,8 @@ namespace PdfProcessorApp.Controllers
                     await secondPdf.CopyToAsync(stream);
                 }
 
-                // Benzersiz bir RequestId oluştur
                 var requestId = Guid.NewGuid().ToString();
                 
-                // Kafka mesajı oluştur
                 var outputFileName = $"merged_{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 var message = new PdfProcessingMessage
                 {
@@ -242,19 +233,15 @@ namespace PdfProcessorApp.Controllers
                     RequestTime = DateTime.UtcNow
                 };
 
-                // İşlem durumunu kaydet
                 _processingStatusService.AddOrUpdateStatus(message);
 
-                // Mesajı Kafka'ya gönder
                 await _kafkaProducer.ProduceMessageAsync(message);
 
-                // TempData'ya bilgileri kaydet
                 TempData["Message"] = "PDF birleştirme işlemi başlatıldı. İşlem tamamlandığında sonuçlar burada gösterilecek.";
                 TempData["ProcessingId"] = requestId;
                 TempData["OutputFileName"] = outputFileName;
                 TempData["MergedFilePath"] = $"/output/{outputFileName}";
 
-                // Durumu logla
                 _logger.LogInformation($"PDF birleştirme işlemi başlatıldı. RequestId: {requestId}, Çıktı dosyası: {outputFileName}");
 
                 return RedirectToAction("Index", new { fileName, activeTool = "mergePdf" });
@@ -289,7 +276,6 @@ namespace PdfProcessorApp.Controllers
 
             try
             {
-                // Önce PDF'i sadece okuma modunda açalım ve içeriğini yeni bir PDF'e kopyalayalım
                 using (var inputDocument = PdfReader.Open(inputPath, PdfDocumentOpenMode.Import))
                 {
                     if (pageNumber > inputDocument.PageCount)
@@ -298,26 +284,22 @@ namespace PdfProcessorApp.Controllers
                         return RedirectToAction("Index", new { fileName, activeTool = "deletePages" });
                     }
 
-                    // Yeni bir PDF oluştur
                     using (var outputDocument = new PdfSharpCore.Pdf.PdfDocument())
                     {
-                        // Orijinal PDF'in özelliklerini kopyala
                         outputDocument.Info.Title = inputDocument.Info.Title;
                         outputDocument.Info.Author = inputDocument.Info.Author;
                         outputDocument.Info.Subject = inputDocument.Info.Subject;
                         outputDocument.Info.Keywords = inputDocument.Info.Keywords;
                         outputDocument.Info.Creator = inputDocument.Info.Creator;
                         
-                        // Silinecek sayfa hariç tüm sayfaları kopyala
                         for (int i = 0; i < inputDocument.PageCount; i++)
                         {
-                            if (i != pageNumber - 1) // Silinecek sayfayı atla
+                            if (i != pageNumber - 1) 
                             {
                                 outputDocument.AddPage(inputDocument.Pages[i]);
                             }
                         }
                         
-                        // Yeni PDF'i kaydet
                         outputDocument.Save(outputPath);
                     }
                 }
@@ -352,16 +334,13 @@ namespace PdfProcessorApp.Controllers
 
             var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
 
-            // Dosya türüne göre işlem yap
             if (fileExtension == ".txt")
             {
-                // Metin dosyası içeriğini oku
                 var content = System.IO.File.ReadAllText(filePath);
                 return Content(content, "text/plain");
             }
             else if (fileExtension == ".docx" || fileExtension == ".pdf")
             {
-                // Dosyayı görüntüle
                 return Redirect($"/output/{fileName}");
             }
 
@@ -378,17 +357,14 @@ namespace PdfProcessorApp.Controllers
             
             try
             {
-                // Dosya yolunu oluştur
                 string filePath = Path.Combine(_outputPath, fileName);
                 
-                // Dosyanın var olup olmadığını kontrol et
                 if (!System.IO.File.Exists(filePath))
                 {
                     _logger.LogError($"İndirilmek istenen dosya bulunamadı: {filePath}");
                     return NotFound("Dosya bulunamadı.");
                 }
                 
-                // Dosya uzantısına göre MIME türünü belirle
                 string contentType = "application/octet-stream";
                 string extension = Path.GetExtension(filePath).ToLowerInvariant();
                 
@@ -399,10 +375,8 @@ namespace PdfProcessorApp.Controllers
                 else if (extension == ".pdf")
                     contentType = "application/pdf";
                 
-                // Dosya içeriğini oku
                 byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
                 
-                // Dosyayı indir
                 return File(fileBytes, contentType, Path.GetFileName(filePath));
             }
             catch (Exception ex)
@@ -420,7 +394,6 @@ namespace PdfProcessorApp.Controllers
 
             try
             {
-                // Çıkarılan metin dosyasını bul
                 var status = _processingStatusService.GetStatus(fileName);
                 if (status == null || string.IsNullOrEmpty(status.OutputFilePath))
                     return NotFound("Metin dosyası bulunamadı.");
@@ -429,7 +402,6 @@ namespace PdfProcessorApp.Controllers
                 if (!System.IO.File.Exists(filePath))
                     return NotFound("Metin dosyası bulunamadı.");
 
-                // Dosya içeriğini oku
                 var text = System.IO.File.ReadAllText(filePath, System.Text.Encoding.UTF8);
                 return Content(text, "text/plain", System.Text.Encoding.UTF8);
             }

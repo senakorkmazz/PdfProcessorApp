@@ -4,11 +4,9 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC ve Razor sayfalarını ekle
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// Servislerimizi kaydedelim
 builder.Services.AddSingleton<ProcessingStatusService>();
 builder.Services.AddSingleton<KafkaProducerService>();
 builder.Services.AddHostedService<KafkaConsumerService>();
@@ -22,10 +20,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-// Statik dosyalara erişim için middleware'i yapılandır
-app.UseStaticFiles(); // wwwroot klasörü için varsayılan yapılandırma
+app.UseStaticFiles(); 
 
-// Output klasörü için özel yapılandırma
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
@@ -33,7 +29,6 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/output",
     OnPrepareResponse = ctx =>
     {
-        // MIME türünü ayarla
         var path = ctx.File.PhysicalPath;
         var ext = Path.GetExtension(path).ToLowerInvariant();
         
@@ -42,7 +37,6 @@ app.UseStaticFiles(new StaticFileOptions
         else if (ext == ".docx")
             ctx.Context.Response.ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
         
-        // Cache'leme davranışını ayarla
         ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store");
         ctx.Context.Response.Headers.Append("Pragma", "no-cache");
         ctx.Context.Response.Headers.Append("Expires", "-1");
